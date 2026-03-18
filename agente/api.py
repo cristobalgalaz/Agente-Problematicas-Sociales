@@ -1,0 +1,301 @@
+from flask import Flask, jsonify, request, send_file
+from flask_cors import CORS
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import json
+from datetime import datetime
+import csv
+import io
+from dotenv import load_dotenv
+import os
+
+app = Flask(__name__)
+CORS(app)
+
+
+
+# Cargar variables de entorno
+load_dotenv()
+
+@app.route('/')
+def index():
+    """Servir el frontend HTML"""
+    return send_file('index.html')
+
+# Configuración de PostgreSQL
+DB_CONFIG = {
+    'host': os.getenv('DB_HOST'),
+    'port': int(os.getenv('DB_PORT')),
+    'database': os.getenv('DB_DATABASE'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD')
+}
+
+
+
+def get_db_connection():
+    """Obtener conexión a la base de datos"""
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        return conn
+    except Exception as e:
+        print(f"Error conectando a PostgreSQL: {e}")
+        return None
+
+@app.route('/api/problematicas', methods=['GET'])
+def get_problematicas():
+    """Obtener todas las problemáticas con filtros opcionales"""
+    try:
+        # Parámetros de búsqueda
+        search = request.args.get('search', '').strip()
+        area_social = request.args.get('area_social', '').strip()
+        area_tecnologica = request.args.get('area_tecnologica', '').strip()
+        tiene_problematica = request.args.get('tiene_problematica', '').strip()
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+        
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Query base
+        query = """
+            SELECT 
+                id,
+                titulo,
+                descripcion,
+                area_social,
+                area_tecnologica,
+                solucion,
+                url_fuente,
+                fecha_analisis
+            FROM problematicas
+            WHERE 1=1
+        """
+        params = []
+        
+        # Filtro de búsqueda
+        if search:
+            query += " AND (titulo ILIKE %s OR descripcion ILIKE %s OR area_social ILIKE %s)"
+            search_param = f'%{search}%'
+            params.extend([search_param, search_param, search_param])
+        
+        # Filtro por área social
+        if area_social:
+            query += " AND area_social ILIKE %s"
+            params.append(f'%{area_social}%')
+        
+        # Filtro por área tecnológica
+        if area_tecnologica:
+            query += " AND area_tecnologica ILIKE %s"
+            params.append(f'%{area_tecnologica}%')
+        
+        # Ordenar por fecha
+        query += " ORDER BY fecha_analisis DESC"
+        
+        cursor.execute(query, params)
+        results = cursor.fetchall()
+        
+        # Convertir a lista de diccionarios
+        problematicas = []
+        for row in results:
+            item = dict(row)
+            # Convertir fechas a string
+            if item.get('fecha_analisis'):
+                item['fecha_analisis'] = item['fecha_analisis'].isoformat() if hasattr(item['fecha_analisis'], 'isoformat') else str(item['fecha_analisis'])
+            
+            problematicas.append(item)
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': problematicas,
+            'total': len(problematicas)
+        })
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/estadisticas', methods=['GET'])
+def get_estadisticas():
+    """Obtener estadísticas generales"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+        
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Total de registros
+        cursor.execute("SELECT COUNT(*) as total FROM problematicas")
+        total = cursor.fetchone()['total']
+        
+        # Por área social
+        cursor.execute("""
+            SELECT area_social, COUNT(*) as cantidad 
+            FROM problematicas 
+            WHERE area_social IS NOT NULL AND area_social != 'N/A'
+            GROUP BY area_social 
+            ORDER BY cantidad DESC
+            LIMIT 10
+        """)
+        areas_sociales = cursor.fetchall()
+        
+        # Por área tecnológica
+        cursor.execute("""
+            SELECT area_tecnologica, COUNT(*) as cantidad 
+            FROM problematicas 
+            WHERE area_tecnologica IS NOT NULL AND area_tecnologica != 'N/A'
+            GROUP BY area_tecnologica 
+            ORDER BY cantidad DESC
+            LIMIT 10
+        """)
+        areas_tecnologicas = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'total': total,
+                'areas_sociales': [dict(row) for row in areas_sociales],
+                'areas_tecnologicas': [dict(row) for row in areas_tecnologicas]
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/export/csv', methods=['GET'])
+def export_csv():
+    """Exportar problemáticas a CSV"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+        
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT 
+                id, titulo, url_fuente, descripcion, fecha_analisis, 
+                area_social, area_tecnologica, solucion
+            FROM problematicas
+            ORDER BY fecha_analisis DESC
+        """)
+        
+        results = cursor.fetchall()
+        
+        # Crear CSV en memoria
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Headers
+        writer.writerow([
+            'ID', 'Título', 'URL', 'Descripción', 'Fecha Análisis',
+            'Área Social', 'Área Tecnológica', 'Solución'
+        ])
+        
+        # Datos
+        for row in results:
+            writer.writerow([
+                row['id'],
+                row['titulo'],
+                row['url_fuente'],
+                row['descripcion'],
+                row['fecha_analisis'],
+                row['area_social'],
+                row['area_tecnologica'],
+                row['solucion']
+            ])
+        
+        cursor.close()
+        conn.close()
+        
+        # Preparar respuesta
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8-sig')),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'problematicas_sociales_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        )
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/areas', methods=['GET'])
+def get_areas():
+    """Obtener listas únicas de áreas para filtros"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+        
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Áreas sociales únicas
+        cursor.execute("""
+            SELECT DISTINCT area_social 
+            FROM problematicas 
+            WHERE area_social IS NOT NULL AND area_social != 'N/A'
+            ORDER BY area_social
+        """)
+        areas_sociales = [row['area_social'] for row in cursor.fetchall()]
+        
+        # Áreas tecnológicas únicas
+        cursor.execute("""
+            SELECT DISTINCT area_tecnologica 
+            FROM problematicas 
+            WHERE area_tecnologica IS NOT NULL AND area_tecnologica != 'N/A'
+            ORDER BY area_tecnologica
+        """)
+        areas_tecnologicas = [row['area_tecnologica'] for row in cursor.fetchall()]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'areas_sociales': areas_sociales,
+                'areas_tecnologicas': areas_tecnologicas
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/health', methods=['GET'])
+def health():
+    """Endpoint de salud"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'status': 'unhealthy', 'database': 'disconnected'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
+
+if __name__ == '__main__':
+    print("🚀 Iniciando API Flask...")
+    print(f"📊 Base de datos: PostgreSQL en {DB_CONFIG['host']}:{DB_CONFIG['port']}")
+    print("🌐 Servidor: http://localhost:5000")
+    app.run(debug=True, host='0.0.0.0', port=5000)
