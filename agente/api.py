@@ -183,7 +183,7 @@ def export_csv():
         
         cursor.execute("""
             SELECT 
-                id, titulo, url_fuente, descripcion, fecha_analisis, 
+                id, titulo, url_fuente, Descripcion, fecha_analisis, 
                 area_social, area_tecnologica, solucion
             FROM problematicas
             ORDER BY fecha_analisis DESC
