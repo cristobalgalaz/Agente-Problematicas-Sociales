@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agente Inteligente - Problemáticas Sociales.</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card-title-truncate {
+            display: -webkit-box;
+           /*-webkit-line-clamp: 2;*/
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 3rem;
+        }
+
+        .card-text-truncate-3 {
+            display: -webkit-box;
+            /*-webkit-line-clamp: 3;*/
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 4.5rem;
+        }
+
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="app-bg">
+         <!-- Header -->
+        <header class="app-header py-4 mb-4">
+            <div class="container">
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+
+                    <!-- Branding -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="app-logo">
+                            <i class="bi bi-search fs-2 text-primary"></i>
+                        </div>
+                        <div>
+                            <div class="app-kicker mb-1">Dashboard de análisis automatizado</div>
+                            <h1 class="h4 mb-0 fw-bold">Buscador de Problemáticas Sociales</h1>
+                            <small class="text-muted">Análisis automatizado de publicaciones del foro Replit Community</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+     <!--<div class="hero-section">
+        <div class="hero-content text-center">
+
+            <div class="hero-icon">
+                <i class="bi bi-search"></i>
+            </div>
+
+            <h1 class="hero-title">Buscador de Problemáticas</h1>
+
+            <p class="hero-subtitle">
+                Descubre tendencias, riesgos y oportunidades en tiempo real
+            </p>
+
+            <div class="hero-search mt-4">
+                <input type="text" class="form-control hero-input"
+                    placeholder="Buscar problemática, tecnología, riesgo..." />
+            </div>
+
+        </div>
+    </div>-->    
+    <div class="container py-4">
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-4">
+                <div class="card stat-card total border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small">Total de Posts</div>
+                                <div class="stats-value" id="stat-total">0</div>
+                            </div>
+                            <i class="bi bi-files fs-1 text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="card stat-card social border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small">Área Social</div>
+                                <div class="stats-value fs-6" id="stat-problems">-</div>
+                            </div>
+                            <i class="bi bi-bar-chart-line fs-1 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="card stat-card tech border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small">Área Tecnológica</div>
+                                <div class="stats-value fs-6" id="stat-no-problems">-</div>
+                            </div>
+                            <i class="bi bi-cpu fs-1 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+                <!-- Scraping Manual -->
+        <div class="card card-tools border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="mb-3"> Buscador</h5>
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="bi bi-hash me-1"></i> Cantidad de posts
+                        </label>
+                        <input type="number" id="scraping-cantidad" class="form-control" placeholder="Ej: 10" min="1" max="100">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="bi bi-tags me-1"></i> Categoría
+                        </label>
+                        <input type="text" id="scraping-categoria" class="form-control" placeholder="ask, support (opcional)">
+                    </div>
+
+                    <div class="col-md-4 d-flex gap-2">
+                        <button class="btn btn-primary bi bi-send-fill w-100" id="btn-scraping" onclick="ejecutarScraping()">
+                            Iniciar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="scraping-status" class="mt-3 p-3 rounded bg-light d-none">
+                    <span id="scraping-status-icon"></span>
+                    <span id="scraping-status-text" class="ms-2"></span>
+                </div>
+
+                <div id="scraping-resultados" class="mt-3 d-none">
+                    <h6>📋 Últimos resultados</h6>
+                    <div id="scraping-resultados-grid" class="row g-3"></div>
+                </div>
+            </div>
+        </div>
+          <!-- Filters -->
+        <div class="card card-tools border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label for="search" class="form-label">
+                            <i class="bi bi-sliders me-1"></i> Filtrar resultados
+                        </label>
+                        <input type="text" id="search" class="form-control" placeholder="Título, problemática, contenido..." />
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label for="area-social" class="form-label">
+                            <i class="bi bi-bar-chart me-1"></i> Área Social
+                        </label>
+                        <select id="area-social" class="form-select">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label for="area-tech" class="form-label">
+                            <i class="bi bi-laptop me-1"></i> Área Tecnológica
+                        </label>
+                        <select id="area-tech" class="form-select">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-2 d-grid">
+                        <button class="btn btn-success" onclick="exportCSV()">
+                            <i class="bi bi-download me-1"></i> Exportar CSV
+                        </button>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="only-favorites">
+                            <label class="form-check-label" for="only-favorites">
+                                <i class="bi bi-star-fill text-warning me-1"></i> Solo favoritos
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Results Header -->
+        <div class="results-toolbar mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <div class="results-label">Resultados encontrados</div>
+                    <div class="fw-semibold" id="results-count">0 resultados</div>
+                </div>
+
+                <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Limpiar filtros
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="text-center py-5" id="loading">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <div class="text-muted">Cargando problemáticas...</div>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="row g-4" id="cards-grid"></div>
+
+        <!-- Empty State -->
+        <div class="text-center py-5 d-none" id="empty-state">
+            <i class="bi bi-inbox fs-1 text-secondary"></i>
+            <h3 class="h5 mt-3">No se encontraron resultados</h3>
+            <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="modal-title"></h5>
+                        <div class="small text-muted" id="modal-meta"></div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="modal-body"></div>
+            </div>
+        </div>
+    </div>
+    <footer class="app-footer mt-5 py-4">
+    <div class="container">
+
+        <div class="row g-4 align-items-center">
+
+            <!-- Info -->
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">
+                    © 2026 Agente Inteligente · Análisis de problemáticas sociales
+                </div>
+            </div>
+        </div>
+
+    </div>
+</footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const API_URL = '';
+        let allProblematicas = [];
+        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        let detailModal;
+        let currentPage = 1;
+        const itemsPerPage = 9;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+
+            loadData();
+            loadFilters();
+
+            document.getElementById('search').addEventListener('input', debounce(filterData, 300));
+            document.getElementById('area-social').addEventListener('change', filterData);
+            document.getElementById('area-tech').addEventListener('change', filterData);
+            document.getElementById('only-favorites').addEventListener('change', filterData);
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        async function loadData() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('cards-grid').style.display = 'none';
+                document.getElementById('empty-state').classList.add('d-none');
+
+                const response = await fetch(`${API_URL}/problematicas`);
+                const result = await response.json();
+                console.log("RESULT:", result);
+
+                allProblematicas = Object.values(
+                    result.data.reduce((acc, item) => {
+                        acc[item.titulo] = item;
+                        return acc;
+                    }, {})
+                );
+
+                displayData(allProblematicas);
+                loadStats();
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar los datos. Verifica que la API esté corriendo en servidor');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function loadStats() {
+            document.getElementById('stat-total').textContent = allProblematicas.length;
+
+            const socialCount = {};
+            const techCount = {};
+
+            allProblematicas.forEach(p => {
+                if (p.area_social) {
+                    socialCount[p.area_social] = (socialCount[p.area_social] || 0) + 1;
+                }
+                if (p.area_tecnologica) {
+                    techCount[p.area_tecnologica] = (techCount[p.area_tecnologica] || 0) + 1;
+                }
+            });
+
+            const topSocial = Object.entries(socialCount).sort((a, b) => b[1] - a[1])[0];
+            const topTech = Object.entries(techCount).sort((a, b) => b[1] - a[1])[0];
+
+            document.getElementById('stat-problems').textContent = topSocial ? topSocial[0] : '-';
+            document.getElementById('stat-no-problems').textContent = topTech ? topTech[0] : '-';
+        }
+
+        async function loadFilters() {
+            try {
+                const response = await fetch(`${API_URL}/areas`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const socialSelect = document.getElementById('area-social');
+                    const techSelect = document.getElementById('area-tech');
+
+                    result.data.areas_sociales.forEach(area => {
+                        const option = document.createElement('option');
+                        option.value = area;
+                        option.textContent = area;
+                        socialSelect.appendChild(option);
+                    });
+
+                    result.data.areas_tecnologicas.forEach(area => {
+                        const option = document.createElement('option');
+                        option.value = area;
+                        option.textContent = area;
+                        techSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading filters:', error);
+            }
+        }
+
+        function filterData() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const areaSocial = document.getElementById('area-social').value;
+            const areaTech = document.getElementById('area-tech').value;
+            const onlyFavorites = document.getElementById('only-favorites').checked;
+
+            let filtered = allProblematicas;
+
+            if (search) {
+                filtered = filtered.filter(p =>
+                    p.titulo.toLowerCase().includes(search) ||
+                    (p.descripcion && p.descripcion.toLowerCase().includes(search)) ||
+                    (p.area_social && p.area_social.toLowerCase().includes(search))
+                );
+            }
+
+            if (areaSocial) {
+                filtered = filtered.filter(p => p.area_social === areaSocial);
+            }
+
+            if (areaTech) {
+                filtered = filtered.filter(p => p.area_tecnologica === areaTech);
+            }
+
+            if (onlyFavorites) {
+                filtered = filtered.filter(p => favorites.includes(p.id));
+            }
+
+            displayData(filtered);
+        }
+
+        function displayData(data) {
+            const grid = document.getElementById('cards-grid');
+            const emptyState = document.getElementById('empty-state');
+            const resultsCount = document.getElementById('results-count');
+
+            resultsCount.textContent = `${data.length} resultado${data.length !== 1 ? 's' : ''}`;
+
+
+            if (data.length === 0) {
+                grid.style.display = 'none';
+                emptyState.classList.remove('d-none');
+                return;
+            }
+
+            grid.style.display = 'flex';
+            emptyState.classList.add('d-none');
+
+            
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedData = data.slice(start, end);
+            grid.innerHTML = paginatedData.map(item => createCard(item)).join('');
+            renderPagination(data.length);
+            console.log("Renderizando:", paginatedData.length);
+        }
+
+       function createCard(item) {
+        const isFavorite = favorites.includes(item.id);
+        const hasContent = item.descripcion && item.descripcion !== 'Sin contenido';
+
+         const isImportant =
+        (item.descripcion && item.descripcion.length > 120) ||
+        (item.area_social && item.area_social !== 'N/A' && item.area_tecnologica && item.area_tecnologica !== 'N/A');
+
+        return `
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card issue-card ${isImportant ? 'issue-highlight' : ''} h-100 border-0 shadow-s">
+                    <div class="card-body d-flex flex-column">
+                        
+                        <div class="issue-card-top mb-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <h5 class="card-title card-title-truncate mb-0">${item.titulo}</h5>
+
+                                <button class="btn btn-sm btn-favorite ${isFavorite ? 'btn-warning' : 'btn-outline-warning'}"
+                                        onclick="toggleFavorite(${item.id})"
+                                        id="fav-${item.id}">
+                                    <i class="bi ${isFavorite ? 'bi-star-fill' : 'bi-star'}"></i>
+                                </button>
+                            </div>
+
+                            <div class="issue-meta mt-2">
+                                <span class="issue-date">
+                                    <i class="bi bi-calendar-event me-1"></i>${formatDate(item.fecha_analisis)}
+                                </span>
+                            </div>
+                        </div>
+
+                        ${hasContent ? `
+                            <p class="card-text text-muted card-text-truncate-3 issue-description">
+                                ${item.descripcion}
+                            </p>
+                        ` : ''}
+
+                        <div class="mt-auto">
+                            <div class="issue-tags mb-3 d-flex flex-wrap gap-2">
+                                ${item.area_social && item.area_social !== 'N/A'
+                                    ? `<span class="badge text-bg-primary"><i class="bi bi-bar-chart me-1"></i>${item.area_social}</span>`
+                                    : ''}
+                                ${item.area_tecnologica && item.area_tecnologica !== 'N/A'
+                                    ? `<span class="badge text-bg-warning"><i class="bi bi-cpu me-1"></i>${item.area_tecnologica}</span>`
+                                    : ''}
+                            </div>
+
+                            <div class="issue-actions d-flex flex-wrap gap-2">
+                                <button class="btn btn-primary btn-sm"
+                                    onclick='viewDetail(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
+                                    <i class="bi bi-eye me-1"></i> Ver detalles
+                                </button>
+
+                                ${item.url_fuente ? `
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                        onclick="window.open('${item.url_fuente}', '_blank')">
+                                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir post
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+        function viewDetail(item) {
+            const title = document.getElementById('modal-title');
+            const meta = document.getElementById('modal-meta');
+            const body = document.getElementById('modal-body');
+
+            title.textContent = item.titulo;
+            meta.innerHTML = `
+                <i class="bi bi-calendar-event me-1"></i> ${formatDate(item.fecha_analisis)}
+            `;
+
+            body.innerHTML = `
+                <div class="mb-4">
+                    <h6 class="border-bottom pb-2 mb-3">Información General</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 bg-light">
+                                <strong>ID</strong><br>
+                                <span>${item.id}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 bg-light">
+                                <strong>Fecha de análisis</strong><br>
+                                <span>${formatDate(item.fecha_analisis)}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 bg-light">
+                                <strong>Área Social</strong><br>
+                                <span>${item.area_social || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 bg-light">
+                                <strong>Área Tecnológica</strong><br>
+                                <span>${item.area_tecnologica || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                ${item.descripcion ? `
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">Problematica</h6>
+                        <p>${item.descripcion}</p>
+                    </div>
+                ` : ''}
+
+                ${item.solucion && item.solucion !== 'N/A' ? `
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">Solución Sugerida</h6>
+                        <p>${item.solucion}</p>
+                    </div>
+                ` : ''}
+
+                ${item.url_fuente ? `
+                    <div class="mt-3">
+                        <a href="${item.url_fuente}" target="_blank" class="btn btn-primary">
+                            <i class="bi bi-link-45deg me-1"></i> Ver fuente original
+                        </a>
+                    </div>
+                ` : ''}
+            `;
+
+            detailModal.show();
+        }
+
+        function closeModal() {
+            detailModal.hide();
+        }
+
+        function toggleFavorite(id) {
+            const index = favorites.indexOf(id);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(id);
+            }
+
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            filterData();
+        }
+
+        function resetFilters() {
+            document.getElementById('search').value = '';
+            document.getElementById('area-social').value = '';
+            document.getElementById('area-tech').value = '';
+            document.getElementById('only-favorites').checked = false;
+            displayData(allProblematicas);
+        }
+
+        async function exportCSV() {
+            try {
+                const response = await fetch(`${API_URL}/export/csv`);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `problematicas_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al exportar CSV');
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('es-CL', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        let pollingInterval = null;
+
+async function ejecutarScraping() {
+    const cantidad = document.getElementById('scraping-cantidad').value;
+    const categoria = document.getElementById('scraping-categoria').value.trim();
+
+    const btn = document.getElementById('btn-scraping');
+    const statusDiv = document.getElementById('scraping-status');
+    const statusIcon = document.getElementById('scraping-status-icon');
+    const statusText = document.getElementById('scraping-status-text');
+
+    if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+    }
+
+
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Ejecutando...';
+    statusDiv.classList.remove('d-none');
+    statusDiv.className = 'mt-3 p-3 rounded bg-light';
+    statusIcon.textContent = '⏳';
+    statusText.textContent = 'Iniciando scraping...';
+    document.getElementById('scraping-resultados').classList.add('d-none');
+
+    try {
+        const payload = {};
+        if (cantidad) payload.cantidad_posts = parseInt(cantidad);
+        if (categoria) payload.categoria = categoria;
+
+        const response = await fetch(`${API_URL}/api/scraping/ejecutar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            statusDiv.className = 'mt-3 p-3 rounded bg-danger bg-opacity-10 border border-danger';
+            statusIcon.textContent = '❌';
+            statusText.textContent = result.mensaje || 'Error al iniciar el scraping';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send-fill me-1"></i> Iniciar';
+            return;
+        }
+        pollingInterval = setInterval(consultarEstadoScraping, 4000);
+        statusIcon.textContent = '🔄';
+        statusText.textContent = 'Scraping en progreso...';
+        
+        
+
+    } catch (error) {
+        statusDiv.className = 'mt-3 p-3 rounded bg-danger bg-opacity-10 border border-danger';
+        statusIcon.textContent = '❌';
+        statusText.textContent = 'Error de conexión con la API';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send-fill me-1"></i> Iniciar';
+    }
+}
+
+async function consultarEstadoScraping() {
+    try {
+        const response = await fetch(`${API_URL}/api/scraping/estado`);
+        const result = await response.json();
+
+        if (!result.success) return;
+
+        const estado = result.estado;
+        const statusDiv = document.getElementById('scraping-status');
+        const statusIcon = document.getElementById('scraping-status-icon');
+        const statusText = document.getElementById('scraping-status-text');
+
+       if (estado === 'completado') {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+
+            statusDiv.className = 'mt-3 p-3 rounded bg-success bg-opacity-10 border border-success';
+            statusIcon.textContent = '✅';
+            statusText.textContent = 'Scraping finalizado correctamente';
+
+            document.getElementById('btn-scraping').disabled = false;
+            document.getElementById('btn-scraping').innerHTML = '<i class="bi bi-send-fill me-1"></i> Iniciar';
+
+            await loadData();
+
+            currentPage = 1;
+            displayData(allProblematicas);
+            
+            mostrarUltimosResultados()
+            console.log("DATA FINAL:", allProblematicas);
+            return;
+
+        } else if (estado === 'error') {
+            clearInterval(pollingInterval);
+            statusDiv.className = 'mt-3 p-3 rounded bg-danger bg-opacity-10 border border-danger';
+            statusIcon.textContent = '❌';
+            statusText.textContent = 'Error durante el scraping';
+            document.getElementById('btn-scraping').disabled = false;
+            document.getElementById('btn-scraping').innerHTML = '<i class="bi bi-send-fill me-1"></i> Iniciar';
+        }
+
+    } catch (error) {
+        console.error('Error consultando estado:', error);
+    }
+}
+
+  function mostrarUltimosResultados() {
+    const resultadosDiv = document.getElementById('scraping-resultados');
+    const grid = document.getElementById('scraping-resultados-grid');
+
+    const cantidad = parseInt(document.getElementById('scraping-cantidad').value) || 6;
+
+    const ultimos = [...allProblematicas]
+        .sort((a, b) => new Date(b.fecha_analisis) - new Date(a.fecha_analisis))
+        .slice(0, cantidad); 
+
+    if (ultimos.length === 0) return;
+
+    grid.innerHTML = ultimos.map(item => createCard(item)).join('');
+    resultadosDiv.classList.remove('d-none');
+}
+
+    function renderPagination(totalItems) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        const oldPaginationContainer = document.getElementById('pagination-container');
+        if (oldPaginationContainer) {
+            oldPaginationContainer.remove();
+        }
+
+        const container = document.createElement('div');
+        container.id = 'pagination-container';
+
+        let paginationHTML = `
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+        `;
+
+        paginationHTML += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage - 1})">Anterior</button>
+            </li>
+        `;
+
+        for (let i = 1; i <= totalPages; i++) {
+            paginationHTML += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <button class="page-link" onclick="changePage(${i})">${i}</button>
+                </li>
+            `;
+        }
+
+        paginationHTML += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage + 1})">Siguiente</button>
+            </li>
+        `;
+
+        paginationHTML += `</ul></nav>`;
+
+        container.innerHTML = paginationHTML;
+
+        document.getElementById('cards-grid').after(container);
+    }
+
+    function changePage(page) {
+    currentPage = page;
+    filterData();
+    }
+
+   
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,618 @@
+{
+  "name": "buscador automatico",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {
+          "maxTokensToSample": 1500,
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        416
+      ],
+      "id": "0c0d83da-4a2d-44ec-a68c-fe2f38f2d1ab",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "fYU8Um0scVlprr8I",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 1,5,9,13,17,21 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        208
+      ],
+      "id": "fa0e7263-3b22-477c-bc84-df208cf3cabe",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "url": "https://replit.discourse.group/latest.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        208
+      ],
+      "id": "7c4e26c5-38d1-4c81-8122-a0a4f89ab72b",
+      "name": "HTTP Request2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analiza el siguiente contenido de una publicación del foro de Replit y determina si existe alguna problemática.\n\nContexto adicional (puede ayudar o no ser relevante):\n{{ $json.contexto_adicional }}\n\nSi el contexto no es útil, ignóralo completamente.\n\nSe considera problemática CUALQUIER dificultad, error o necesidad del usuario, incluyendo:\n- Bugs o errores técnicos\n- Funcionalidades que no funcionan\n- Dificultades de uso o aprendizaje\n- Limitaciones de la plataforma\n- Problemas de rendimiento o acceso\n- Necesidades no cubiertas\n\nIMPORTANTE:\n- Basa tu respuesta SOLO en la información proporcionada\n- NO inventes información\n- Si no hay evidencia clara de problema, responde false\n- Sé breve y específico (máximo 2 líneas en \"problematica\")\n\nTítulo: {{ $json.titulo }}\nContenido: {{ $json.contenido }}\n\nResponde SOLO en JSON válido (sin texto adicional, sin markdown, sin ```):\n\n{\n  \"tiene_problematica\": boolean,\n  \"problematica\": \"string\",\n  \"area_social\": \"Educación | Tecnología | Productividad | Accesibilidad | Otro\",\n  \"area_tecnologica\": \"Web | IA | IoT | Mobile | Automatización | Otro\",\n  \"solucion_sugerida\": \"string\"\n}\n\nReglas adicionales OBLIGATORIAS:\n- Si \"tiene_problematica\" es false:\n  - \"problematica\": \"\"\n  - \"solucion_sugerida\": \"\"\n- No agregues campos extra\n- No expliques tu respuesta\nSi hay múltiples problemas, menciona solo el principal.",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "=Analiza el siguiente contenido de una publicación del foro de Replit y determina si existe alguna problemática.\n\nContexto adicional (puede ayudar o no ser relevante):\n{{ $json.contexto_adicional }}\n\nSi el contexto no es útil, ignóralo completamente.\n\nSe considera problemática CUALQUIER dificultad, error o necesidad del usuario, incluyendo:\n- Bugs o errores técnicos\n- Funcionalidades que no funcionan\n- Dificultades de uso o aprendizaje\n- Limitaciones de la plataforma\n- Problemas de rendimiento o acceso\n- Necesidades no cubiertas\n\nIMPORTANTE:\n- Basa tu respuesta SOLO en la información proporcionada\n- NO inventes información\n- Si no hay evidencia clara de problema, responde false\n- Sé breve y específico (máximo 2 líneas en \"problematica\")\n\nTítulo: {{ $json.titulo }}\nContenido: {{ $json.contenido }}\n\nResponde SOLO en JSON válido (sin texto adicional, sin markdown, sin ```):\n\n{\n  \"tiene_problematica\": boolean,\n  \"problematica\": \"string\",\n  \"area_social\": \"Educación | Tecnología | Productividad | Accesibilidad | Otro\",\n  \"area_tecnologica\": \"Web | IA | IoT | Mobile | Automatización | Otro\",\n  \"solucion_sugerida\": \"string\"\n}\n\nReglas adicionales OBLIGATORIAS:\n- Si \"tiene_problematica\" es false:\n  - \"problematica\": \"\"\n  - \"solucion_sugerida\": \"\"\n- No agregues campos extra\n- No expliques tu respuesta\nSi hay múltiples problemas, menciona solo el principal."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1360,
+        176
+      ],
+      "id": "0a2db3c3-c37d-495b-9f9e-e525ab250107",
+      "name": "Basic LLM Chain1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "amount": 12
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1632,
+        0
+      ],
+      "id": "28800a73-7650-4fe4-85b5-63abdbb013bc",
+      "name": "Wait1",
+      "webhookId": "1333a76c-d89d-416d-aad8-aafc29c16eea"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a4b0a12f-822d-4d08-a200-928f7845f63c",
+              "leftValue": "={{ $json.validacion.tiene_problematica }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2016,
+        160
+      ],
+      "id": "61fc8a74-7332-4ec7-9c54-f9b2d3695ecc",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sp_insertar_problematica(\n  '{{ $json.titulo.replace(/'/g, \"''\") }}'::character varying,\n  '{{ $json.analisis.problematica.replace(/'/g, \"''\") }}'::character varying,\n  '{{ $json.analisis.area_social.replace(/'/g, \"''\") }}'::character varying,\n  '{{ $json.analisis.area_tecnologica.replace(/'/g, \"''\") }}'::character varying,\n  '{{ $json.analisis.solucion_sugerida.replace(/'/g, \"''\") }}'::character varying,\n  '{{ $json.url }}'::character varying\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2224,
+        0
+      ],
+      "id": "5128edf7-d8db-410e-9df3-6e3fbddc4d1b",
+      "name": "Postgres1",
+      "credentials": {
+        "postgres": {
+          "id": "Rw3ilKd2oIiYJ6Ma",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO logs_ejecucion\n  (flujo_nombre, etapa, estado, mensaje)\nVALUES\n  ('HU-01 Replit Forum',\n   'inicio_ejecucion',\n   'inicio',\n   'Flujo iniciado por scheduler');",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cab2d1a1-359f-43ff-b0df-f690cc397253",
+      "name": "log de Inicio ejecución",
+      "credentials": {
+        "postgres": {
+          "id": "Rw3ilKd2oIiYJ6Ma",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO logs_ejecucion\n  (flujo_nombre, etapa, estado, topic_id, mensaje, detalles)\nVALUES (\n  'HU-01 Replit Forum',\n  'http_request_topic',\n  'error',\n  {{ $json.id }},\n  'Error al obtener topic',\n  '{{ JSON.stringify({error: $json.error?.message ?? \"HTTP error\"}).replace(/'/g,\"''\") }}'::jsonb\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        640,
+        656
+      ],
+      "id": "f19bc13a-1e59-4fb9-82d6-b7941ad1868c",
+      "name": "log  error http topic",
+      "credentials": {
+        "postgres": {
+          "id": "Rw3ilKd2oIiYJ6Ma",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO logs_ejecucion\n  (flujo_nombre, etapa, estado, topic_id, mensaje, detalles)\nVALUES (\n  'HU-01 Replit Forum',\n  'analisis_llm',\n  '{{ $json.validacion.ok ? \"ok\" : \"error\" }}',\n  {{ $json.id }},\n  '{{ ($json.validacion.ok ? \"Análisis ok, tiene_problematica=\" + $json.validacion.tiene_problematica : \"Error de parseo LLM\").replace(/'/g,\"''\") }}',\n  '{{ JSON.stringify({tiene_problematica: $json.analisis?.tiene_problematica, area_social: $json.analisis?.area_social}).replace(/'/g,\"''\") }}'::jsonb\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1920,
+        400
+      ],
+      "id": "a45724f5-b9ec-4e23-a939-240bf3022244",
+      "name": "log Resultado análisis LLM",
+      "credentials": {
+        "postgres": {
+          "id": "Rw3ilKd2oIiYJ6Ma",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO logs_ejecucion (flujo_nombre, etapa, estado, mensaje, detalles)\nVALUES (\n  'HU-01 Replit Forum',\n  'insercion_postgres',\n  'ok',\n  'Problemática insertada en BD',\n  '{\"titulo\": \"{{ ($json.titulo ?? \"sin titulo\").slice(0,80).replace(/\"/g, \"\") }}\"}'::jsonb\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2384,
+        0
+      ],
+      "id": "6d6fc131-4099-4706-9d4f-a5b0a3f77551",
+      "name": "log Problemática insertada",
+      "credentials": {
+        "postgres": {
+          "id": "Rw3ilKd2oIiYJ6Ma",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item, index) => {\n  const topicData = $('extrae contenido').all()[index]?.json || {};\n  const searxResults = item.json?.results || [];\n  \n  const contexto = searxResults\n    .slice(0, 3)\n    .map(r => r.title + ': ' + r.content)\n    .join(' | ')\n    .slice(0, 500);\n\n  return {\n    json: {\n      ...topicData,\n      contexto_adicional: contexto || 'Sin contexto adicional'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        64
+      ],
+      "id": "c8eb10ad-7ad7-435c-a15e-6da45f369146",
+      "name": "combina"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO logs_ejecucion\n  (flujo_nombre, etapa, estado, topic_id, mensaje, detalles)\nVALUES (\n  'HU-01 Replit Forum',\n  'insercion_postgres',\n  'skip',\n  {{ $json.id }},\n  'Topic descartado: sin problemática',\n  '{{ JSON.stringify({titulo: ($json.titulo??\"\").slice(0,80)}).replace(/'/g,\"''\") }}'::jsonb\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2400,
+        320
+      ],
+      "id": "9285b0e6-403d-4fcd-87e5-504c6ee567c4",
+      "name": "log Topic sin problemática",
+      "credentials": {
+        "postgres": {
+          "id": "Rw3ilKd2oIiYJ6Ma",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst topics = response.topic_list.topics;\n\nreturn topics.map(topic => ({\n  json: {\n    id: topic.id,\n    titulo: topic.title,\n    url: `https://replit.discourse.group/t/${topic.slug}/${topic.id}`,\n    fecha: topic.created_at,\n    vistas: topic.views,\n    respuestas: topic.reply_count\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        208
+      ],
+      "id": "4bcc5910-b8d7-4417-bf2d-dedf7e9d9cc7",
+      "name": "extrae campos"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const raw = item.json;\n  const firstPost = raw?.post_stream?.posts?.[0];\n  \n  const content = firstPost?.cooked\n    ? firstPost.cooked\n        .replace(/<[^>]*>/g, ' ')\n        .replace(/&amp;/g, '&')\n        .replace(/\\s+/g, ' ')\n        .trim()\n        .slice(0, 2000)\n    : 'Sin contenido';\n\n  return {\n    json: {\n      id: raw.id,\n      titulo: raw.title,\n      url: `https://replit.discourse.group/t/${raw.slug}/${raw.id}`,\n      contenido: content,\n      autor: firstPost?.username || 'desconocido',\n      fecha: raw.created_at,\n      tags: raw.tags || []\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        224
+      ],
+      "id": "156c712c-483d-4e62-ab3b-3e0636a864a2",
+      "name": "extrae contenido"
+    },
+    {
+      "parameters": {
+        "jsCode": "console.warn('Validación fallida:', JSON.stringify($json.validacion.errores));\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        320
+      ],
+      "id": "841f6048-ad4c-4d40-a0b3-21bda8495d18",
+      "name": "validacion fallida",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item, index) => {\n  const datosOriginales = $('extrae contenido').all()[index]?.json || {};\n  \n  let raw = item.json?.text || '{}';\n  raw = raw.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  \n  let analisis = {};\n  try {\n    analisis = JSON.parse(raw);\n  } catch(e) {\n    analisis = {\n      tiene_problematica: false,\n      problematica: 'Error al parsear',\n      area_social: 'N/A',\n      area_tecnologica: 'N/A',\n      solucion_sugerida: 'N/A',\n      _error: e.message\n    };\n  }\n\n  // --- Validación heurística de coherencia ---\n  function extraerPalabras(texto) {\n    if (!texto || typeof texto !== 'string') return new Set();\n    return new Set(\n      texto.toLowerCase()\n        .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '') // quita tildes\n        .replace(/[^a-z0-9\\s]/g, '')\n        .split(/\\s+/)\n        .filter(w => w.length > 4) // ignora palabras cortas (de, la, en...)\n    );\n  }\n\n  const palabrasProblematica = extraerPalabras(analisis.problematica);\n  const palabrasSolucion     = extraerPalabras(analisis.solucion_sugerida);\n\n  let palabrasComunes = 0;\n  for (const palabra of palabrasSolucion) {\n    if (palabrasProblematica.has(palabra)) palabrasComunes++;\n  }\n\n  const solucionValida = typeof analisis.solucion_sugerida === 'string' &&\n                         analisis.solucion_sugerida.trim().length >= 20 &&\n                         !['n/a', 'no aplica', 'ninguna', 'sin solucion'].includes(\n                           analisis.solucion_sugerida.trim().toLowerCase()\n                         );\n\n  const coherente = solucionValida && (palabrasComunes >= 1 || palabrasSolucion.size === 0);\n\n  return {\n    json: {\n      id: datosOriginales.id,\n      titulo: datosOriginales.titulo,\n      url: datosOriginales.url,\n      fecha: datosOriginales.fecha,\n      analisis: analisis,\n      validacion: {\n        ok: analisis.tiene_problematica !== undefined,\n        tiene_problematica: analisis.tiene_problematica,\n        solucion_coherente: coherente  // ← campo nuevo\n      }\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        160
+      ],
+      "id": "5b502262-9208-4ded-93d1-0d9abe489896",
+      "name": "recronstruye json",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://searxng:8080/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.titulo }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        864,
+        64
+      ],
+      "id": "4d3bbbd4-8c89-468e-b416-395644a75eb7",
+      "name": "SearXNG"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        256,
+        208
+      ],
+      "id": "1dadf42d-d75b-4477-8232-112114a36d77",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "=https://replit.discourse.group/t/{{ $json.id }}.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        368,
+        560
+      ],
+      "id": "ed70b634-a79a-4f98-a8a8-f2ba0516bfca",
+      "name": "Obtener detalles",
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "extrae campos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "log de Inicio ejecución",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "recronstruye json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "validacion fallida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "log Problemática insertada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "combina": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrae campos": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrae contenido": {
+      "main": [
+        [
+          {
+            "node": "SearXNG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validacion fallida": {
+      "main": [
+        [
+          {
+            "node": "log Topic sin problemática",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "recronstruye json": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "log Resultado análisis LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SearXNG": {
+      "main": [
+        [
+          {
+            "node": "combina",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log  error http topic": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Obtener detalles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener detalles": {
+      "main": [
+        [
+          {
+            "node": "extrae contenido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "log  error http topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log Topic sin problemática": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log Problemática insertada": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c622a345-8533-4fa1-af76-ae9704509b0d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "75a6c32838128cb74392280efcbf30fa51b442336c710402a04334d27076a416"
+  },
+  "id": "1awdSNmw7CJm1i4A",
+  "tags": []
+}
